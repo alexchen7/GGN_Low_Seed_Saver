@@ -21,58 +21,83 @@ def GGN_auto_snatch():
     """auto search low seeded torrents and download to designated folders,
     build a csv file to record the time of download"""
     
-    page_num = 0
+    """GENERAL PARAMETERS BEGIN"""
     
-    # desired total size (GB)
-    desired_size = 1024
+    cookies = {"PHPSESSID": "12334456788999secretlol","session": \
+                   "replace_this_with_your_own"}
     
+    # re for torrent line
+    torrent_line_reg = re.compile(".+groupid_.+ edition_.+")
+    
+    # time format of uploaded time
+    time_reg = re.compile("[JFMASOND][a-z][a-z] \d{2} \d{4}, \d{2}:\d{2}")
+    
+    # torrent link reg
+    torrent_link_reg = re.compile("torrents\.php.*torrent_pass=\w{32}")
+    
+    # torrent id reg
+    torrent_id_reg = re.compile("torrents.php.*torrentid=\d*")
+    
+    # general category reg (will also take torrent name if "[]" is in name)
+    torrent_category_reg = re.compile("\[.*\]")
+    
+    # size conversion to Bytes
+    size_conversion = {'B': 1, 'KB':1024, 'MB': 1024**2, 'GB':1024**3, \
+                       'TB':1024**4}
+    
+    # keyword of promotions
+    promotions = {'Free Leech!':'FL', 'Neutral Leech!':'NL'}
+    
+    # torrent status
+    statuses = {'color_seeding': 'seeding', 'color_snatched':'snatched', \
+                'color_leeching': 'leeching'}
+        
+    # file name
+    file_name = 'low_seed.txt'
+    
+    """GENERAL PARAMETERS END"""
+    
+    """USER INPUT BEGIN"""
+    
+    # desired total size
+    desired_size = float(input('Please enter the desired size in GB:'))
+    
+    # end page number want to go through
+    start_page_num = int(input('Please enter the start page number you want:'))
+    current_page_num = start_page_num
+	
+    # end page number want to go through
+    end_page_num = int(input('Please enter the end page number you want:'))
+	
+    # max peers allowed, will treat differently for torrents at the limit and below the limit
+    max_peers = int(input('Please enter the max seeders allowed:'))
+	
+    # youngest torrent age allowed for torrents peer number under max_peers
+    torrent_age_below_limit = \
+    int(input('Please enter the youngest torrent life (in years) allowed for torrents peer number under maxpeers:'))
+	
+	# youngest torrent age allowed for torrents peer number reach max_peers
+    torrent_age_at_limit = \
+	int(input('Please enter the youngest torrent life (in years) allowed for torrents peer number reached maxpeers:'))
+	
     # initialze total size
     total_size = 0
     
     # total torrents
     total_torrent= 0
     
-    while page_num <= 15 and total_size < desired_size:
+    """USER INPUT END"""
+    
+    # start loop over torrent pages
+    
+    while current_page_num <= end_page_num and total_size < desired_size:
         
-        #START WITH GENERAL PARAMETERS
         
-        page_num += 1
-        page_num = str(page_num)
-        
-        url = "https://gazellegames.net/torrents.php?page=" + page_num + "&order_way=desc&order_by=size&action=advanced"
-        
-        cookies = {}
+        url = "https://gazellegames.net/torrents.php?page=" + str(current_page_num) + "&order_way=desc&order_by=size&action=advanced"
         
         torrent_page_r = requests.get(url, cookies = cookies)
         
         torrent_page = BeautifulSoup(torrent_page_r.text, features = 'lxml')
-        
-        # re for torrent line
-        torrent_line_reg = re.compile(".+groupid_.+ edition_.+")
-        
-        # time format of uploaded time
-        time_reg = re.compile("[JFMASOND][a-z][a-z] \d{2} \d{4}, \d{2}:\d{2}")
-        
-        # torrent link reg
-        torrent_link_reg = re.compile("torrents\.php.*torrent_pass=\w{32}")
-        
-        # torrent id reg
-        torrent_id_reg = re.compile("torrents.php.*torrentid=\d*")
-        
-        # size conversion to Bytes
-        size_conversion = {'B': 1, 'KB':1024, 'MB': 1024**2, 'GB':1024**3, \
-                           'TB':1024**4}
-        
-        # keyword of promotions
-        promotions = {'Free Leech!':'FL', 'Neutral Leech!':'NL'}
-        
-        # torrent status
-        statuses = {'color_seeding': 'seeding', 'color_snatched':'snatched', \
-                    'color_leeching': 'leeching'}
-        
-        # file name
-        file_name = 'low_seed.txt'
-        # GENERAL PARAMETERS END
         
         # find the torrent section
         torrent_section = torrent_page.find_all('table', attrs = {'class': \
@@ -84,8 +109,6 @@ def GGN_auto_snatch():
         # get the torrent lines
         torrent_lines = torrent_section.findAll('tr', attrs = {'class': torrent_line_reg})
         
-        
-        count = 0
 
         for line in torrent_lines:
             # BEGIN TORRENT INFO COLLECTION
@@ -134,6 +157,9 @@ def GGN_auto_snatch():
             if name=='RP':
                 name = torrent_info[0].findAll('a')[3].text
             
+            
+            
+            
             # info link of the torrent
             info_link = re.findall(torrent_id_reg, str(torrent_info[0]))
             info_link = "http://gazellegames.net/" + \
@@ -164,13 +190,13 @@ def GGN_auto_snatch():
                     break
                 status = 'not snatched'
                 
-            #FINISHED TORRENT INFO COLLECTION
+            #END TORRENT INFO COLLECTION
             
             
             #BEGIN TORRENT SELECTION PART
             
             # start with less than 4 seeders
-            if (seeder + leecher) < 4 and seeder != 0 and up_time > timedelta(days=365) and status!='NL':
+            if (seeder + leecher) < max_peers and seeder != 0 and up_time > timedelta(days=365*torrent_age_below_limit) and promotion!='NL':
                 # filter out trumpable
                 if not trumpable:
                     # filter existed torrents
@@ -183,7 +209,7 @@ def GGN_auto_snatch():
                         total_size += size/1024**3
                         total_torrent += 1
                                                 
-            elif (seeder + leecher) == 4 and seeder != 0 and up_time > timedelta(days = 365*3) and status!='NL':
+            elif (seeder + leecher) == max_peers and seeder != 0 and up_time > timedelta(days = 365*torrent_age_at_limit) and promotion!='NL':
                 if not trumpable:
                     # filter existed torrents
                     if status != 'seeding' and status!= 'leeching' and status!= 'snatched':
@@ -195,17 +221,20 @@ def GGN_auto_snatch():
                         # doing stats
                         total_size += size/1024**3
                         total_torrent += 1
+                        
+            #END TORENT SELECTION PART
             
-        page_num = int(page_num)
-		
-		# don't crash the server
-        time.sleep(5)
+        time.sleep(1.5)
     
+        # turn to next page
+        current_page_num += 1
+        
+    #save torrent links and summary into a text file
     f = open(file_name, "a")
-    summary = 'We have gone to page {}! {} of low torrents were mined with total size of {} GB!'.format(page_num, total_torrent, total_size)
+    summary = 'We have gone to page {}! {} of low torrents were mined with total size of {} GB! \nRequirement of this search: start page is {}, max peers allowed: {}, min torrent age below max peers is {}-year, min torrent age reached max peer is {}-year.'.format(current_page_num-1, total_torrent, round(total_size, 3), start_page_num, max_peers, torrent_age_below_limit, torrent_age_at_limit)
     print (summary)
     f.write(summary)
     f.close()
-    
-    return count
 
+if __name__ == "__main__":
+    GGN_auto_snatch()
