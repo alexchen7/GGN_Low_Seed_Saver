@@ -19,7 +19,8 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 def GGN_auto_snatch():
     
     """auto search low seeded torrents and download to designated folders,
-    build a csv file to record the time of download"""
+    build a csv file to record the time of download. SO FAR, ONLY 
+    URL recording was accomplished"""
     
     """GENERAL PARAMETERS BEGIN"""
     
