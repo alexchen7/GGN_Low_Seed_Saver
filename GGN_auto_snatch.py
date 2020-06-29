@@ -202,7 +202,7 @@ def GGN_auto_snatch():
             # start with less than 4 seeders
             if (seeder + leecher) > 2:
                 if (seeder + leecher) < 6:
-                    if gold_threshold < (0.2733-0.000194*up_time.days)/(seeder + leecher+1) and promotion!='NL':
+                    if gold_threshold < (0.2733+0.000194*up_time.days)/(seeder + leecher+1) and promotion!='NL':
                         # filter out trumpable
                         if not trumpable:
                             # filter existed torrents
@@ -211,11 +211,11 @@ def GGN_auto_snatch():
                                 f = open(file_name, "a")
                                 f.write(torrent_link + '\n')
                                 f.close()
-                                print ((0.2733-0.000194*up_time.days)/(seeder + leecher+1), '\n', name, '\n', info_link, '\n', '{}GB'.format(round(size/1024**3,3)), '{}days'.format(up_time.days), '{}peers'.format(seeder), '{}leechers'.format(leecher), 'promotion:{}'.format(promotion), 'status:{}'.format(status), '\n\n')
+                                print ((0.2733+0.000194*up_time.days)/(seeder + leecher+1), '\n', name, '\n', info_link, '\n', '{}GB'.format(round(size/1024**3,3)), '{}days'.format(up_time.days), '{}peers'.format(seeder), '{}leechers'.format(leecher), 'promotion:{}'.format(promotion), 'status:{}'.format(status), '\n\n')
                                 total_size += size/1024**3
                                 total_torrent += 1
                 elif (seeder + leecher) < 12:
-                    if gold_threshold < (0.2733-0.000194*up_time.days+0.0278*(seeder + leecher-4))/(seeder + leecher+1) and promotion!='NL':
+                    if gold_threshold < (0.2733+0.000194*up_time.days+0.0278*(seeder + leecher-4))/(seeder + leecher+1) and promotion!='NL':
                         # filter out trumpable
                         if not trumpable:
                             # filter existed torrents
@@ -224,7 +224,7 @@ def GGN_auto_snatch():
                                 f = open(file_name, "a")
                                 f.write(torrent_link + '\n')
                                 f.close()
-                                print ((0.2733-0.000194*up_time.days+0.0278*(seeder + leecher-4))/(seeder + leecher+1), '\n', name, '\n', info_link, '\n', '{}GB'.format(round(size/1024**3,3)), '{}days'.format(up_time.days), '{}peers'.format(seeder), '{}leechers'.format(leecher), 'promotion:{}'.format(promotion), 'status:{}'.format(status), '\n\n')
+                                print ((0.2733+0.000194*up_time.days+0.0278*(seeder + leecher-4))/(seeder + leecher+1), '\n', name, '\n', info_link, '\n', '{}GB'.format(round(size/1024**3,3)), '{}days'.format(up_time.days), '{}peers'.format(seeder), '{}leechers'.format(leecher), 'promotion:{}'.format(promotion), 'status:{}'.format(status), '\n\n')
                                 total_size += size/1024**3
                                 total_torrent += 1
                                                 
