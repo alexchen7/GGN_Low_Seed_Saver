@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jun 26 20:27:29 2020
-
 @author: Achan
 """
 
@@ -71,15 +70,19 @@ def GGN_auto_snatch():
     end_page_num = int(input('Please enter the end page number you want:'))
 	
     # max peers allowed, will treat differently for torrents at the limit and below the limit
-    max_peers = int(input('Please enter the max seeders allowed:'))
+    # max_peers = int(input('Please enter the max seeders allowed:'))
 	
     # youngest torrent age allowed for torrents peer number under max_peers
-    torrent_age_below_limit = \
-    int(input('Please enter the youngest torrent life (in years) allowed for torrents peer number under maxpeers:'))
-	
+    # torrent_age_below_limit = \
+    # int(input('Please enter the youngest torrent life (in years) allowed for torrents peer number under maxpeers:'))
+
+    # minimum gold per hour
+    gold_threshold = \
+    float(input('Please enter the minimum gold per hour:'))
+
 	# youngest torrent age allowed for torrents peer number reach max_peers
-    torrent_age_at_limit = \
-	int(input('Please enter the youngest torrent life (in years) allowed for torrents peer number reached maxpeers:'))
+    #torrent_age_at_limit = \
+	# int(input('Please enter the youngest torrent life (in years) allowed for torrents peer number reached maxpeers:'))
 	
     # initialze total size
     total_size = 0
@@ -197,31 +200,46 @@ def GGN_auto_snatch():
             #BEGIN TORRENT SELECTION PART
             
             # start with less than 4 seeders
-            if (seeder + leecher) < max_peers and seeder != 0 and up_time > timedelta(days=365*torrent_age_below_limit) and promotion!='NL':
-                # filter out trumpable
-                if not trumpable:
-                    # filter existed torrents
-                    if status != 'seeding' and status!= 'leeching' and status!= 'snatched':
-                        # download
-                        f = open(file_name, "a")
-                        f.write(torrent_link + '\n')
-                        f.close()
-                        print (name, '\n', info_link, '\n', '{}GB'.format(round(size/1024**3,3)), '{}days'.format(up_time.days), '{}peers'.format(seeder), '{}leechers'.format(leecher), 'promotion:{}'.format(promotion), 'status:{}'.format(status), '\n\n')
-                        total_size += size/1024**3
-                        total_torrent += 1
+            if (seeder + leecher) > 2:
+                if (seeder + leecher) < 6:
+                    if gold_threshold < (0.2733-0.000194*up_time.days)/(seeder + leecher+1) and promotion!='NL':
+                        # filter out trumpable
+                        if not trumpable:
+                            # filter existed torrents
+                            if status != 'seeding' and status!= 'leeching' and status!= 'snatched':
+                                # download
+                                f = open(file_name, "a")
+                                f.write(torrent_link + '\n')
+                                f.close()
+                                print ((0.2733-0.000194*up_time.days)/(seeder + leecher+1), '\n', name, '\n', info_link, '\n', '{}GB'.format(round(size/1024**3,3)), '{}days'.format(up_time.days), '{}peers'.format(seeder), '{}leechers'.format(leecher), 'promotion:{}'.format(promotion), 'status:{}'.format(status), '\n\n')
+                                total_size += size/1024**3
+                                total_torrent += 1
+                elif (seeder + leecher) < 12:
+                    if gold_threshold < (0.2733-0.000194*up_time.days+0.0278*(seeder + leecher-4))/(seeder + leecher+1) and promotion!='NL':
+                        # filter out trumpable
+                        if not trumpable:
+                            # filter existed torrents
+                            if status != 'seeding' and status!= 'leeching' and status!= 'snatched':
+                                # download
+                                f = open(file_name, "a")
+                                f.write(torrent_link + '\n')
+                                f.close()
+                                print ((0.2733-0.000194*up_time.days+0.0278*(seeder + leecher-4))/(seeder + leecher+1), '\n', name, '\n', info_link, '\n', '{}GB'.format(round(size/1024**3,3)), '{}days'.format(up_time.days), '{}peers'.format(seeder), '{}leechers'.format(leecher), 'promotion:{}'.format(promotion), 'status:{}'.format(status), '\n\n')
+                                total_size += size/1024**3
+                                total_torrent += 1
                                                 
-            elif (seeder + leecher) == max_peers and seeder != 0 and up_time > timedelta(days = 365*torrent_age_at_limit) and promotion!='NL':
-                if not trumpable:
+            # elif (seeder + leecher) == max_peers and seeder != 0 and up_time > timedelta(days = 365*torrent_age_at_limit) and promotion!='NL':
+            #    if not trumpable:
                     # filter existed torrents
-                    if status != 'seeding' and status!= 'leeching' and status!= 'snatched':
-                        # download
-                        f = open(file_name, "a")
-                        f.write(torrent_link + '\n')
-                        f.close()
-                        print (name, '\n', info_link, '\n', '{}GB'.format(round(size/1024**3,3)), '{}days'.format(up_time.days), '{}peers'.format(seeder), '{}leechers'.format(leecher), 'promotion:{}'.format(promotion), 'status:{}'.format(status), '\n\n')
+            #        if status != 'seeding' and status!= 'leeching' and status!= 'snatched':
+            #            # download
+            #            f = open(file_name, "a")
+            #            f.write(torrent_link + '\n')
+            #            f.close()
+            #            print (name, '\n', info_link, '\n', '{}GB'.format(round(size/1024**3,3)), '{}days'.format(up_time.days), '{}peers'.format(seeder), '{}leechers'.format(leecher), 'promotion:{}'.format(promotion), 'status:{}'.format(status), '\n\n')
                         # doing stats
-                        total_size += size/1024**3
-                        total_torrent += 1
+            #            total_size += size/1024**3
+            #            total_torrent += 1
                         
             #END TORENT SELECTION PART
             
@@ -232,7 +250,7 @@ def GGN_auto_snatch():
         
     #save torrent links and summary into a text file
     f = open(file_name, "a")
-    summary = 'We have gone to page {}! {} of low torrents were mined with total size of {} GB! \nRequirement of this search: start page is {}, max peers allowed: {}, min torrent age below max peers is {}-year, min torrent age reached max peer is {}-year.'.format(current_page_num-1, total_torrent, round(total_size, 3), start_page_num, max_peers, torrent_age_below_limit, torrent_age_at_limit)
+    summary = 'We have gone to page {}! {} of low torrents were mined with total size of {} GB! \nRequirement of this search: start page is {}, gold threshold is {}.'.format(current_page_num-1, total_torrent, round(total_size, 3), start_page_num, gold_threshold)
     print (summary)
     f.write(summary)
     f.close()
